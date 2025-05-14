@@ -3,7 +3,6 @@ import { Send as SendIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
-  Container,
   Avatar,
   IconButton,
   TextField,
@@ -18,7 +17,7 @@ import {
   CardContent,
   CardMedia,
   CardActions,
-  Chip
+  Container
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -31,11 +30,8 @@ import {
   ThumbUp as LikeIcon,
   ThumbUpOutlined as LikeOutlineIcon,
   ModeCommentOutlined as CommentIcon,
-  ShareOutlined as ShareIcon,
   BookmarkBorder as BookmarkIcon,
-  Close as CloseIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import CreatePostModal from './CreatePostModal';
@@ -341,14 +337,74 @@ const Dashboard = () => {
       </Box>
 
       {/* Main Content */}
-      <Box sx={{
+      <Container maxWidth="md" sx={{ 
         flex: 1,
         ml: '280px',
         p: 3,
-        maxWidth: '680px'
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
       }}>
+        {/* Top Navigation */}
+        <Box sx={{
+          width: '100%',
+          backgroundColor: 'white',
+          p: 1,
+          mb: 2,
+          borderRadius: 2,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <TextField
+            placeholder="Search..."
+            variant="outlined"
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 20,
+                backgroundColor: '#f0f2f5',
+                width: 300
+              }
+            }}
+          />
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton sx={{ mr: 1 }}>
+              <Badge badgeContent={3} color="error">
+                <ChatIcon />
+              </Badge>
+            </IconButton>
+
+            <IconButton sx={{ mr: 1 }}>
+              <Badge badgeContent={5} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+
+            <IconButton onClick={handleMenuOpen}>
+              <MoreIcon />
+            </IconButton>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
+          </Box>
+        </Box>
+
         {/* Create Post */}
-        <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+        <Paper sx={{ 
+          p: 2, 
+          mb: 3, 
+          borderRadius: 2, 
+          width: '100%',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Avatar src={user?.avatar} sx={{ mr: 2 }} />
             <TextField
@@ -388,271 +444,163 @@ const Dashboard = () => {
         </Paper>
 
         {/* Posts */}
-        {posts.map(post => (
-          <Card key={post.id} sx={{ mb: 3, borderRadius: 2 }}>
-            <CardHeader
-              avatar={
-                <Avatar>{post.authorName ? post.authorName.charAt(0) : 'U'}</Avatar>
-              }
-              title={post.authorName || 'Unknown User'}
-              subheader={new Date(post.createdAt).toLocaleString()}
-              action={
-                user?.id === post.userId && (
-                  <IconButton>
-                    <MoreIcon />
-                  </IconButton>
-                )
-              }
-            />
-            
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {post.title}
-              </Typography>
-              <Typography variant="body1" paragraph>
-                {post.description}
-              </Typography>
-              
-              {/* Media display */}
-              {post.mediaUrls && post.mediaUrls.length > 0 && (
-                <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {post.mediaUrls.map((url, index) => (
-                    <Box key={index} sx={{ 
-                      maxHeight: 400,
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      overflow: 'hidden',
-                      borderRadius: 1
-                    }}>
-                      {isMediaVideo(url) ? (
-                        <ReactPlayer 
-                          url={url} 
-                          controls 
-                          width="100%"
-                          height="auto"
-                        />
-                      ) : (
-                        <img 
-                          src={url} 
-                          alt={`Post media ${index}`} 
-                          style={{ 
-                            maxWidth: '100%', 
-                            maxHeight: '100%',
-                            objectFit: 'contain' 
-                          }} 
-                        />
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </CardContent>
-            
-            <CardActions sx={{ px: 2, pt: 0, pb: 1 }}>
-              <Button 
-                startIcon={post.likes?.includes(user?.id) ? <LikeIcon color="primary" /> : <LikeOutlineIcon />}
-                onClick={() => handleLikePost(post.id)}
-                sx={{ textTransform: 'none' }}
-              >
-                {post.likes?.length || 0} Likes
-              </Button>
-              <Button 
-                startIcon={<CommentIcon />}
-                sx={{ textTransform: 'none' }}
-              >
-                {post.comments?.length || 0} Comments
-              </Button>
-              <Button 
-                startIcon={<ShareIcon />}
-                sx={{ textTransform: 'none' }}
-              >
-                Share
-              </Button>
-            </CardActions>
-            
-            {/* Comments section */}
-            <Box sx={{ px: 2, pb: 2 }}>
-              {/* Display existing comments */}
-              {post.comments?.map(comment => (
-                <Box key={comment.id} sx={{ 
-                  display: 'flex', 
-                  alignItems: 'flex-start', 
-                  mb: 1,
-                  p: 1,
-                  backgroundColor: '#f9f9f9',
-                  borderRadius: 1
-                }}>
-                  <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
-                    {comment.authorName?.charAt(0) || 'U'}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                      {comment.authorName || 'Unknown User'}
-                    </Typography>
-                    <Typography variant="body2">
-                      {comment.content}
-                    </Typography>
-                  </Box>
-                  {(comment.userId === user?.id || user?.id === post.userId) && (
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleDeleteComment(post.id, comment.id)}
-                    >
-                      <DeleteIcon fontSize="small" />
+        <Box sx={{ width: '100%', maxWidth: '680px' }}>
+          {posts.map(post => (
+            <Card key={post.id} sx={{ 
+              mb: 3, 
+              borderRadius: 2,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <CardHeader
+                avatar={
+                  <Avatar>{post.authorName ? post.authorName.charAt(0) : 'U'}</Avatar>
+                }
+                title={post.authorName || 'Unknown User'}
+                subheader={new Date(post.createdAt).toLocaleString()}
+                action={
+                  user?.id === post.userId && (
+                    <IconButton>
+                      <MoreIcon />
                     </IconButton>
-                  )}
-                </Box>
-              ))}
+                  )
+                }
+              />
               
-              {/* Add comment */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{user?.name?.charAt(0) || 'U'}</Avatar>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  placeholder="Write a comment..."
-                  value={commentTexts[post.id] || ''}
-                  onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && commentTexts[post.id]?.trim()) {
-                      handleAddComment(post.id, commentTexts[post.id]);
-                    }
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 20,
-                      backgroundColor: '#f0f2f5',
-                    }
-                  }}
-                />
-                <IconButton 
-                  disabled={!commentTexts[post.id]?.trim()}
-                  onClick={() => handleAddComment(post.id, commentTexts[post.id])}
-                  sx={{ ml: 1 }}
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {post.title}
+                </Typography>
+                <Typography variant="body1" paragraph>
+                  {post.description}
+                </Typography>
+                
+                {/* Media display */}
+                {post.mediaUrls && post.mediaUrls.length > 0 && (
+                  <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {post.mediaUrls.map((url, index) => (
+                      <Box key={index} sx={{ 
+                        maxHeight: 400,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        borderRadius: 1
+                      }}>
+                        {isMediaVideo(url) ? (
+                          <ReactPlayer 
+                            url={url} 
+                            controls 
+                            width="100%"
+                            height="auto"
+                          />
+                        ) : (
+                          <img 
+                            src={url} 
+                            alt={`Post media ${index}`} 
+                            style={{ 
+                              maxWidth: '100%', 
+                              maxHeight: '100%',
+                              objectFit: 'contain' 
+                            }} 
+                          />
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </CardContent>
+              
+              <CardActions sx={{ px: 2, pt: 0, pb: 1 }}>
+                <Button 
+                  startIcon={post.likes?.includes(user?.id) ? <LikeIcon color="primary" /> : <LikeOutlineIcon />}
+                  onClick={() => handleLikePost(post.id)}
+                  sx={{ textTransform: 'none' }}
                 >
-                  <SendIcon fontSize="small" />
-                </IconButton>
+                  {post.likes?.length || 0} Likes
+                </Button>
+                <Button 
+                  startIcon={<CommentIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {post.comments?.length || 0} Comments
+                </Button>
+                <Button 
+                  startIcon={<BookmarkIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Save
+                </Button>
+              </CardActions>
+              
+              {/* Comments section */}
+              <Box sx={{ px: 2, pb: 2 }}>
+                {/* Display existing comments */}
+                {post.comments?.map(comment => (
+                  <Box key={comment.id} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'flex-start', 
+                    mb: 1,
+                    p: 1,
+                    backgroundColor: '#f9f9f9',
+                    borderRadius: 1
+                  }}>
+                    <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
+                      {comment.authorName?.charAt(0) || 'U'}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        {comment.authorName || 'Unknown User'}
+                      </Typography>
+                      <Typography variant="body2">
+                        {comment.content}
+                      </Typography>
+                    </Box>
+                    {(comment.userId === user?.id || user?.id === post.userId) && (
+                      <IconButton 
+                        size="small" 
+                        onClick={() => handleDeleteComment(post.id, comment.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Box>
+                ))}
+                
+                {/* Add comment */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                  <Avatar sx={{ width: 32, height: 32, mr: 1 }}>{user?.name?.charAt(0) || 'U'}</Avatar>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    placeholder="Write a comment..."
+                    value={commentTexts[post.id] || ''}
+                    onChange={(e) => handleCommentChange(post.id, e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && commentTexts[post.id]?.trim()) {
+                        handleAddComment(post.id, commentTexts[post.id]);
+                      }
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 20,
+                        backgroundColor: '#f0f2f5',
+                      }
+                    }}
+                  />
+                  <IconButton 
+                    disabled={!commentTexts[post.id]?.trim()}
+                    onClick={() => handleAddComment(post.id, commentTexts[post.id])}
+                    sx={{ ml: 1 }}
+                  >
+                    <SendIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               </Box>
-            </Box>
-          </Card>
-        ))}
-      </Box>
-
-      {/* Right Sidebar */}
-      <Box sx={{
-        width: 300,
-        p: 2,
-        position: 'fixed',
-        right: 0,
-        height: '100vh',
-        borderLeft: '1px solid #ddd',
-        backgroundColor: 'white',
-        display: { xs: 'none', xl: 'block' }
-      }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-          News & Updates
-        </Typography>
-
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ color: 'gray', mb: 1 }}>
-            Trending Skills
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: '0.8rem' }}>#</Avatar>
-            <Typography variant="body2">React.js</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: '0.8rem' }}>#</Avatar>
-            <Typography variant="body2">UI/UX Design</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: '0.8rem' }}>#</Avatar>
-            <Typography variant="body2">Python</Typography>
-          </Box>
+            </Card>
+          ))}
         </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Typography variant="subtitle2" sx={{ color: 'gray', mb: 1 }}>
-          Who to follow
-        </Typography>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ mr: 1 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2">Jane Smith</Typography>
-            <Typography variant="caption">UI/UX Designer</Typography>
-          </Box>
-          <Button size="small" sx={{ textTransform: 'none' }}>Follow</Button>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ mr: 1 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2">Mike Johnson</Typography>
-            <Typography variant="caption">Full Stack Developer</Typography>
-          </Box>
-          <Button size="small" sx={{ textTransform: 'none' }}>Follow</Button>
-        </Box>
-      </Box>
-
-      {/* Top Navigation */}
-      <Box sx={{
-        position: 'fixed',
-        top: 0,
-        left: 280,
-        right: 300,
-        backgroundColor: 'white',
-        p: 1,
-        borderBottom: '1px solid #ddd',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1000
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <TextField
-            placeholder="Search..."
-            variant="outlined"
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 20,
-                backgroundColor: '#f0f2f5',
-                width: 300
-              }
-            }}
-          />
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton sx={{ mr: 1 }}>
-            <Badge badgeContent={3} color="error">
-              <ChatIcon />
-            </Badge>
-          </IconButton>
-
-          <IconButton sx={{ mr: 1 }}>
-            <Badge badgeContent={5} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-
-          <IconButton onClick={handleMenuOpen}>
-            <MoreIcon />
-          </IconButton>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-          >
-            <MenuItem onClick={handleLogout}>Logout</MenuItem>
-          </Menu>
-        </Box>
-      </Box>
+      </Container>
 
       {/* Create Post Modal */}
       <CreatePostModal
