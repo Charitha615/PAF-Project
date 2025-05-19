@@ -4,16 +4,14 @@ import com.example.skillsharingplatform.model.Post;
 import com.example.skillsharingplatform.payload.request.CreatePostRequest;
 import com.example.skillsharingplatform.payload.response.PostResponse;
 import com.example.skillsharingplatform.security.UserDetailsImpl;
-import com.example.skillsharingplatform.service.FileStorageService;
 import com.example.skillsharingplatform.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,31 +22,27 @@ public class PostController {
     @Autowired
     private PostService postService;
 
-    @Autowired
-    private FileStorageService fileStorageService;
+    @Value("${app.baseUrl}")
+    private String baseUrl;
 
     @GetMapping
     public ResponseEntity<List<PostResponse>> getAllPosts() {
-        List<Post> posts = postService.getAllPosts();
-        List<PostResponse> postResponses = posts.stream()
-                .map(PostResponse::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(postResponses);
+        return ResponseEntity.ok(postService.getAllPosts().stream()
+                .map(post -> new PostResponse(post, baseUrl))
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<PostResponse>> getPostsByUser(@PathVariable String userId) {
-        List<Post> posts = postService.getPostsByUser(userId);
-        List<PostResponse> postResponses = posts.stream()
-                .map(PostResponse::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(postResponses);
+        return ResponseEntity.ok(postService.getPostsByUser(userId).stream()
+                .map(post -> new PostResponse(post, baseUrl))
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PostResponse> getPostById(@PathVariable String id) {
         Post post = postService.getPostById(id);
-        return ResponseEntity.ok(new PostResponse(post));
+        return ResponseEntity.ok(new PostResponse(post, baseUrl));
     }
 
     @PostMapping
@@ -56,16 +50,8 @@ public class PostController {
             @Valid @RequestBody CreatePostRequest createPostRequest,
             Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-        Post post = new Post(
-                userDetails.getId(),
-                createPostRequest.getTitle(),
-                createPostRequest.getDescription()
-        );
-        post.setMediaUrls(createPostRequest.getMediaUrls());
-
-        Post createdPost = postService.createPost(userDetails.getId(), post);
-        return ResponseEntity.ok(new PostResponse(createdPost));
+        Post createdPost = postService.createPost(userDetails.getId(), createPostRequest);
+        return ResponseEntity.ok(new PostResponse(createdPost, baseUrl));
     }
 
     @PutMapping("/{id}")
@@ -74,14 +60,8 @@ public class PostController {
             @Valid @RequestBody CreatePostRequest updatePostRequest,
             Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-        Post postDetails = new Post();
-        postDetails.setTitle(updatePostRequest.getTitle());
-        postDetails.setDescription(updatePostRequest.getDescription());
-        postDetails.setMediaUrls(updatePostRequest.getMediaUrls());
-
-        Post updatedPost = postService.updatePost(userDetails.getId(), id, postDetails);
-        return ResponseEntity.ok(new PostResponse(updatedPost));
+        Post updatedPost = postService.updatePost(userDetails.getId(), id, updatePostRequest);
+        return ResponseEntity.ok(new PostResponse(updatedPost, baseUrl));
     }
 
     @DeleteMapping("/{id}")
@@ -91,18 +71,5 @@ public class PostController {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         postService.deletePost(userDetails.getId(), id);
         return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<List<String>> uploadFiles(
-            @RequestParam("files") MultipartFile[] files,
-            Authentication authentication) throws IOException {
-        // Limit to 3 files
-        if (files.length > 3) {
-            throw new RuntimeException("Maximum 3 files allowed");
-        }
-
-        List<String> fileUrls = fileStorageService.storeFiles(files);
-        return ResponseEntity.ok(fileUrls);
     }
 }

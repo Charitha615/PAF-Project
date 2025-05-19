@@ -8,34 +8,34 @@ public class CreatePostRequest {
     @NotBlank
     @Size(max = 100)
     private String title;
-    
+
     @Size(max = 1000)
     private String description;
-    
-    private List<String> mediaUrls; // Will be populated after file upload
-    
+
+    private List<String> mediaBase64; // Changed from mediaUrls to mediaBase64
+
     // Getters and Setters
     public String getTitle() {
         return title;
     }
-    
+
     public void setTitle(String title) {
         this.title = title;
     }
-    
+
     public String getDescription() {
         return description;
     }
-    
+
     public void setDescription(String description) {
         this.description = description;
     }
-    
-    public List<String> getMediaUrls() {
-        return mediaUrls;
+
+    public List<String> getMediaBase64() {
+        return mediaBase64;
     }
-    
-    public void setMediaUrls(List<String> mediaUrls) {
-        this.mediaUrls = mediaUrls;
+
+    public void setMediaBase64(List<String> mediaBase64) {
+        this.mediaBase64 = mediaBase64;
     }
 }
